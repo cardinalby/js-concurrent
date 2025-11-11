@@ -1,5 +1,5 @@
 import {Semaphore} from "./semaphore";
-import {ErrGroupTask, RunOptions} from "./common";
+import {Task, RunOptions} from "./common";
 import {raceWithAbortSignal} from "./race_with_abort_signal";
 import {GotRaceWinnerError} from "./race_with_abort";
 import {createGroupAc} from "./group_abort_controller";
@@ -7,7 +7,7 @@ import {createGroupAc} from "./group_abort_controller";
 const allTasksRejectedMessage = 'All promises were rejected'
 
 /**
- * anyWithAbort is similar to Promise.any() but receives ErrGroupTasks and runs tasks concurrently,
+ * anyWithAbort is similar to Promise.any() but receives Tasks and runs tasks concurrently,
  * respecting `options.concurrencyLimit`.
  * Returns the first task that fulfills (resolves successfully).
  * When a task fulfills, all other tasks are aborted with GotRaceWinnerError.
@@ -16,13 +16,13 @@ const allTasksRejectedMessage = 'All promises were rejected'
  * - all running tasks are aborted and new tasks are not started
  * - the resulting Promise is rejected with the abort reason.
  */
-export function anyWithAbort<T extends readonly ErrGroupTask<unknown>[] | []>(
+export function anyWithAbort<T extends readonly Task<unknown>[] | []>(
     tasks: T,
     options?: RunOptions
 ): Promise<Awaited<ReturnType<T[number]>>>;
 
 /**
- * anyWithAbort is similar to Promise.any() but receives ErrGroupTasks and runs tasks concurrently,
+ * anyWithAbort is similar to Promise.any() but receives Tasks and runs tasks concurrently,
  * respecting `options.concurrencyLimit`.
  * Returns the first task that fulfills (resolves successfully).
  * When a task fulfills, all other tasks are aborted with GotRaceWinnerError.
@@ -32,12 +32,12 @@ export function anyWithAbort<T extends readonly ErrGroupTask<unknown>[] | []>(
  * - the resulting Promise is rejected with the abort reason.
  */
 export function anyWithAbort<T>(
-    tasks: Iterable<ErrGroupTask<T>>,
+    tasks: Iterable<Task<T>>,
     options?: RunOptions
 ): Promise<Awaited<T>>;
 
 export async function anyWithAbort(
-    tasks: Iterable<ErrGroupTask<any>>,
+    tasks: Iterable<Task<any>>,
     options: RunOptions = {}
 ): Promise<Awaited<any>> {
     // copy the signal in case options is mutated during execution
@@ -67,7 +67,7 @@ export async function anyWithAbort(
 }
 
 async function anyWithAbortUnlimited(
-    tasks: ErrGroupTask<any>[],
+    tasks: Task<any>[],
     ac: AbortController,
 ): Promise<Awaited<any>> {
     const errors: any[] = new Array(tasks.length)
@@ -100,7 +100,7 @@ async function anyWithAbortUnlimited(
 }
 
 function anyWithAbortLimited(
-    tasks: ErrGroupTask<any>[],
+    tasks: Task<any>[],
     semaphore: Semaphore,
     ac: AbortController,
 ): Promise<Awaited<any>> {

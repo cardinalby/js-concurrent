@@ -1,12 +1,12 @@
 import { allSettledWithAbort } from './all_settled_with_abort'
 import {CancellableTasksTracker, delay} from "./test_util.test";
-import {ErrGroupTask} from "./common";
+import {Task} from "./common";
 
 describe('allSettledWithAbort', () => {
     describe('basic functionality', () => {
         test('runs all tasks successfully and returns results in order', async () => {
             const tr = new CancellableTasksTracker(3)
-            const tasks: ErrGroupTask<number>[] = [
+            const tasks: Task<number>[] = [
                 tr.createTask(1, 50, 1),
                 tr.createTask(2, 30, 2),
                 tr.createTask(3, 10, 3)
@@ -73,7 +73,7 @@ describe('allSettledWithAbort', () => {
         test('does not abort other tasks when one fails', async () => {
             const error = new Error('task-error')
             const tr = new CancellableTasksTracker(4)
-            const tasks: ErrGroupTask<number>[] = [
+            const tasks: Task<number>[] = [
                 tr.createTask(1, 100, 1),
                 tr.createTask(2, 80, 2),
                 tr.createTask(3, 60, error),
@@ -98,7 +98,7 @@ describe('allSettledWithAbort', () => {
             const error1 = new Error('first-error')
             const error2 = new Error('second-error')
             const tr = new CancellableTasksTracker(4)
-            const tasks: ErrGroupTask<number>[] = [
+            const tasks: Task<number>[] = [
                 tr.createTask(1, 100, 1),
                 tr.createTask(2, 80, error1),
                 tr.createTask(3, 60, error2),
@@ -123,7 +123,7 @@ describe('allSettledWithAbort', () => {
             const error2 = new Error('error-2')
             const error3 = new Error('error-3')
             const tr = new CancellableTasksTracker(3)
-            const tasks: ErrGroupTask<number>[] = [
+            const tasks: Task<number>[] = [
                 tr.createTask(1, 50, error1),
                 tr.createTask(2, 40, error2),
                 tr.createTask(3, 60, error3)
@@ -147,7 +147,7 @@ describe('allSettledWithAbort', () => {
         test('respects parent abort signal tasks ignoring abort', async () => {
             const parentAc = new AbortController()
             const tr = new CancellableTasksTracker(2)
-            const tasks: ErrGroupTask<number>[] = [
+            const tasks: Task<number>[] = [
                 tr.createTask(1, 500, 1, { ignoreSignal: true }),
                 tr.createTask(2, 500, 2, { ignoreSignal: true })
             ]
@@ -171,7 +171,7 @@ describe('allSettledWithAbort', () => {
         test('respects parent abort signal tasks no ignoring abort', async () => {
             const parentAc = new AbortController()
             const tr = new CancellableTasksTracker(2)
-            const tasks: ErrGroupTask<number>[] = [
+            const tasks: Task<number>[] = [
                 tr.createTask(1, 500, 1),
                 tr.createTask(2, 500, 2)
             ]
@@ -194,7 +194,7 @@ describe('allSettledWithAbort', () => {
             parentAc.abort('pre-aborted')
 
             const tr = new CancellableTasksTracker(2)
-            const tasks: ErrGroupTask<number>[] = [
+            const tasks: Task<number>[] = [
                 tr.createTask(1, 100, 1),
                 tr.createTask(2, 100, 2)
             ]
@@ -215,7 +215,7 @@ describe('allSettledWithAbort', () => {
             const parentAc = new AbortController()
             const error = new Error('task-error')
             const tr = new CancellableTasksTracker(3)
-            const tasks: ErrGroupTask<number>[] = [
+            const tasks: Task<number>[] = [
                 tr.createTask(1, 50, error),
                 tr.createTask(2, 500, 2),
                 tr.createTask(3, 500, 3)
@@ -237,7 +237,7 @@ describe('allSettledWithAbort', () => {
         test('respects concurrency limit', async () => {
             const concurrencyLimit = 2
             const tr = new CancellableTasksTracker(concurrencyLimit)
-            const tasks: ErrGroupTask<number>[] = [
+            const tasks: Task<number>[] = [
                 tr.createTask(1, 100, 1),
                 tr.createTask(2, 100, 2),
                 tr.createTask(3, 100, 3),
@@ -262,7 +262,7 @@ describe('allSettledWithAbort', () => {
 
         test('zero concurrency limit', async () => {
             const tr = new CancellableTasksTracker(3)
-            const tasks: ErrGroupTask<number>[] = [
+            const tasks: Task<number>[] = [
                 tr.createTask(1, 50, 1),
                 tr.createTask(2, 50, 2),
                 tr.createTask(3, 50, 3)
@@ -283,7 +283,7 @@ describe('allSettledWithAbort', () => {
 
         test('single task with concurrency limit', async () => {
             const tr = new CancellableTasksTracker(1)
-            const tasks: ErrGroupTask<number>[] = [
+            const tasks: Task<number>[] = [
                 tr.createTask(1, 50, 1)
             ]
 
@@ -300,7 +300,7 @@ describe('allSettledWithAbort', () => {
 
         test('concurrency limit larger than number of tasks', async () => {
             const tr = new CancellableTasksTracker(3)
-            const tasks: ErrGroupTask<number>[] = [
+            const tasks: Task<number>[] = [
                 tr.createTask(1, 50, 1),
                 tr.createTask(2, 50, 2),
                 tr.createTask(3, 50, 3)
@@ -323,7 +323,7 @@ describe('allSettledWithAbort', () => {
             const error = new Error('task-2-error')
             const concurrencyLimit = 2
             const tr = new CancellableTasksTracker(concurrencyLimit)
-            const tasks: ErrGroupTask<number>[] = [
+            const tasks: Task<number>[] = [
                 tr.createTask(1, 100, 1),
                 tr.createTask(2, 50, error), // fails first
                 tr.createTask(3, 100, 3),    // should start after task completes
@@ -350,7 +350,7 @@ describe('allSettledWithAbort', () => {
             const error = new Error('task-1-error')
             const concurrencyLimit = 2
             const tr = new CancellableTasksTracker(concurrencyLimit)
-            const tasks: ErrGroupTask<number>[] = [
+            const tasks: Task<number>[] = [
                 tr.createTask(1, 50, error), // fails in first batch
                 tr.createTask(2, 100, 2),
                 tr.createTask(3, 100, 3),
@@ -375,7 +375,7 @@ describe('allSettledWithAbort', () => {
             const error = new Error('task-4-error')
             const concurrencyLimit = 2
             const tr = new CancellableTasksTracker(concurrencyLimit)
-            const tasks: ErrGroupTask<number>[] = [
+            const tasks: Task<number>[] = [
                 tr.createTask(1, 50, 1),
                 tr.createTask(2, 50, 2),
                 tr.createTask(3, 100, 3),
@@ -399,7 +399,7 @@ describe('allSettledWithAbort', () => {
             const parentAc = new AbortController()
             const concurrencyLimit = 2
             const tr = new CancellableTasksTracker(concurrencyLimit)
-            const tasks: ErrGroupTask<number>[] = [
+            const tasks: Task<number>[] = [
                 tr.createTask(1, 50, 1),
                 tr.createTask(2, 50, 2),
                 tr.createTask(3, 50, 3),
@@ -427,7 +427,7 @@ describe('allSettledWithAbort', () => {
             parentAc.abort('pre-aborted')
 
             const tr = new CancellableTasksTracker(2)
-            const tasks: ErrGroupTask<number>[] = [
+            const tasks: Task<number>[] = [
                 tr.createTask(1, 100, 1),
                 tr.createTask(2, 100, 2),
                 tr.createTask(3, 100, 3)
@@ -451,7 +451,7 @@ describe('allSettledWithAbort', () => {
             const error = new Error('task-error')
             const concurrencyLimit = 2
             const tr = new CancellableTasksTracker(concurrencyLimit)
-            const tasks: ErrGroupTask<number>[] = [
+            const tasks: Task<number>[] = [
                 tr.createTask(1, 100, error),
                 tr.createTask(2, 150, 2),
                 tr.createTask(3, 200, 3)
@@ -478,7 +478,7 @@ describe('allSettledWithAbort', () => {
             const error3 = new Error('error-3')
             const concurrencyLimit = 2
             const tr = new CancellableTasksTracker(concurrencyLimit)
-            const tasks: ErrGroupTask<number>[] = [
+            const tasks: Task<number>[] = [
                 tr.createTask(1, 50, error1),
                 tr.createTask(2, 40, error2),
                 tr.createTask(3, 60, error3)
@@ -501,7 +501,7 @@ describe('allSettledWithAbort', () => {
             const error = new Error('task-error')
             const concurrencyLimit = 2
             const tr = new CancellableTasksTracker(concurrencyLimit)
-            const tasks: ErrGroupTask<number>[] = [
+            const tasks: Task<number>[] = [
                 tr.createTask(1, 50, 1),
                 tr.createTask(2, 150, 2, { ignoreSignal: true }),
                 tr.createTask(3, 50, error)
@@ -552,7 +552,7 @@ describe('allSettledWithAbort', () => {
             const error2 = new Error('error-2')
             const concurrencyLimit = 2
             const tr = new CancellableTasksTracker(concurrencyLimit)
-            const tasks: ErrGroupTask<number>[] = [
+            const tasks: Task<number>[] = [
                 tr.createTask(1, 50, 1),
                 tr.createTask(2, 60, error1),
                 tr.createTask(3, 40, 3),
@@ -579,7 +579,7 @@ describe('allSettledWithAbort', () => {
     describe('edge cases', () => {
         test('single task that succeeds', async () => {
             const tr = new CancellableTasksTracker(1)
-            const tasks: ErrGroupTask<string>[] = [
+            const tasks: Task<string>[] = [
                 tr.createTask(1, 50, 'success')
             ]
 
@@ -595,7 +595,7 @@ describe('allSettledWithAbort', () => {
         test('single task that fails', async () => {
             const error = new Error('single-error')
             const tr = new CancellableTasksTracker(1)
-            const tasks: ErrGroupTask<string>[] = [
+            const tasks: Task<string>[] = [
                 tr.createTask(1, 50, error)
             ]
 
@@ -609,7 +609,7 @@ describe('allSettledWithAbort', () => {
         })
 
         test('task that completes synchronously', async () => {
-            const syncTask: ErrGroupTask<number> = async () => 42
+            const syncTask: Task<number> = async () => 42
             const results = await allSettledWithAbort([syncTask])
             expect(results).toEqual([
                 {status: 'fulfilled', value: 42}
@@ -618,7 +618,7 @@ describe('allSettledWithAbort', () => {
 
         test('task that throws synchronously', async () => {
             const error = new Error('sync-error')
-            const syncTask: ErrGroupTask<number> = async () => {
+            const syncTask: Task<number> = async () => {
                 throw error
             }
             const results = await allSettledWithAbort([syncTask])
@@ -629,7 +629,7 @@ describe('allSettledWithAbort', () => {
 
         test('tasks with no delay all succeed', async () => {
             const tr = new CancellableTasksTracker(5)
-            const tasks: ErrGroupTask<number>[] = [
+            const tasks: Task<number>[] = [
                 tr.createTask(1, 0, 1),
                 tr.createTask(2, 0, 2),
                 tr.createTask(3, 0, 3),
@@ -652,7 +652,7 @@ describe('allSettledWithAbort', () => {
         test('task that ignores abort signal but still completes', async () => {
             const error = new Error('error')
             const tr = new CancellableTasksTracker(2)
-            const tasks: ErrGroupTask<number>[] = [
+            const tasks: Task<number>[] = [
                 tr.createTask(1, 100, 1, { ignoreSignal: true }),
                 tr.createTask(2, 50, error)
             ]
@@ -671,7 +671,7 @@ describe('allSettledWithAbort', () => {
         test('multiple tasks ignoring abort signal', async () => {
             const error = new Error('task-error')
             const tr = new CancellableTasksTracker(4)
-            const tasks: ErrGroupTask<number>[] = [
+            const tasks: Task<number>[] = [
                 tr.createTask(1, 200, 1, { ignoreSignal: true }),
                 tr.createTask(2, 200, 2, { ignoreSignal: true }),
                 tr.createTask(3, 50, error),
@@ -693,7 +693,7 @@ describe('allSettledWithAbort', () => {
 
         test('options object without any options', async () => {
             const tr = new CancellableTasksTracker(2)
-            const tasks: ErrGroupTask<number>[] = [
+            const tasks: Task<number>[] = [
                 tr.createTask(1, 50, 1),
                 tr.createTask(2, 50, 2)
             ]

@@ -1,7 +1,7 @@
 {
     "name": "js-concurrency",
     "version": "1.0.0",
-    "description": "Abortion-aware concurrency helpers",
+    "description": "Abortion-aware concurrency primitives",
     "main": "dist/index.js",
     "types": "dist/index.d.ts",
     "type": "module",
@@ -20,9 +20,9 @@
     ],
     "repository": {
         "type": "git",
-        "url": "https://github.com/cardinalby/js-err-group.git"
+        "url": "https://github.com/cardinalby/js-concurrency.git"
     },
-    "homepage": "https://github.com/cardinalby/js-err-group",
+    "homepage": "https://github.com/cardinalby/js-concurrency",
     "author": "cardinalby",
     "license": "MIT",
     "files": [

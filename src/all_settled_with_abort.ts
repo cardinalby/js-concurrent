@@ -1,10 +1,10 @@
 import {Semaphore} from "./semaphore";
-import {ErrGroupTask, RunOptions} from "./common";
+import {Task, RunOptions} from "./common";
 import {raceWithAbortSignal} from "./race_with_abort_signal";
 import {createGroupAc} from "./group_abort_controller";
 
 /**
- * allSettledWithAbort is similar to Promise.allSettled() but receives ErrGroupTasks and runs all provided tasks
+ * allSettledWithAbort is similar to Promise.allSettled() but receives Tasks and runs all provided tasks
  * concurrently, respecting `options.concurrencyLimit`.
  * Unlike allWithAbort, task failures do NOT abort other tasks - all tasks run to completion unless:
  * `options.signal` is aborted, in which case all running tasks are aborted and new tasks are not started.
@@ -12,13 +12,13 @@ import {createGroupAc} from "./group_abort_controller";
  * The resulting Promise resolves with an array of settled results (fulfilled or rejected) for all tasks.
  * The result array has the same length as the input tasks, with each result corresponding to the task at the same index.
  */
-export function allSettledWithAbort<T extends readonly ErrGroupTask<unknown>[] | []>(
+export function allSettledWithAbort<T extends readonly Task<unknown>[] | []>(
     tasks: T,
     options?: RunOptions
 ): Promise<{ -readonly [P in keyof T]: PromiseSettledResult<Awaited<ReturnType<T[P]>>> }>;
 
 /**
- * allSettledWithAbort is similar to Promise.allSettled() but receives ErrGroupTasks and runs all provided tasks
+ * allSettledWithAbort is similar to Promise.allSettled() but receives Tasks and runs all provided tasks
  * concurrently, respecting the provided RunOptions.
  * Unlike allWithAbort, task failures do NOT abort other tasks - all tasks run to completion unless:
  * `options.signal` is aborted, in which case all running tasks are aborted and new tasks are not started.
@@ -26,12 +26,12 @@ export function allSettledWithAbort<T extends readonly ErrGroupTask<unknown>[] |
  * The result array has the same length as the input tasks, with each result corresponding to the task at the same index.
  */
 export function allSettledWithAbort<T>(
-    tasks: Iterable<ErrGroupTask<T>>,
+    tasks: Iterable<Task<T>>,
     options?: RunOptions
 ): Promise<PromiseSettledResult<Awaited<T>>[]>;
 
 export async function allSettledWithAbort(
-    tasks: Iterable<ErrGroupTask<any>>,
+    tasks: Iterable<Task<any>>,
     options: RunOptions = {}
 ): Promise<PromiseSettledResult<Awaited<any>>[]> {
     // copy the signal in case options is mutated during execution
@@ -59,7 +59,7 @@ export async function allSettledWithAbort(
 }
 
 async function allSettledWithAbortUnlimited(
-    tasks: Iterable<ErrGroupTask<any>>,
+    tasks: Iterable<Task<any>>,
     ac: AbortController,
 ): Promise<PromiseSettledResult<Awaited<any>>[]> {
     const promises: Promise<PromiseSettledResult<any>>[] = []
@@ -75,7 +75,7 @@ async function allSettledWithAbortUnlimited(
 }
 
 function allSettledWithAbortLimited(
-    tasks: Iterable<ErrGroupTask<any>>,
+    tasks: Iterable<Task<any>>,
     semaphore: Semaphore,
     ac: AbortController,
 ): Promise<PromiseSettledResult<Awaited<any>>[]> {

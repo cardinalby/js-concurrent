@@ -1,7 +1,7 @@
 /**
- * ErrGroupTask is a function that starts an asynchronous task that can be aborted via an AbortSignal
+ * Tasks is a function that starts an asynchronous task that can be aborted via an AbortSignal
  */
-export type ErrGroupTask<T> = (abortSignal?: AbortSignal) => Promise<T>
+export type Task<T> = (abortSignal?: AbortSignal) => Promise<T>
 export type RunOptions = {
     /**
      * Maximum number of tasks to run concurrently. If not specified or <= 0, all tasks will run concurrently
@@ -14,6 +14,11 @@ export type RunOptions = {
     signal?: AbortSignal
 }
 
+/**
+ * ConcurrentTaskFailedError is thrown when a task running concurrently with others fails.
+ * It wraps the original error as its cause.
+ * Is returned by allWithAbort when any task fails.
+ */
 export class ConcurrentTaskFailedError extends Error {
     public readonly cause: any;
 

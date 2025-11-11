@@ -1,4 +1,4 @@
-import {ErrGroupTask} from "./common";
+import {Task} from "./common";
 
 export function delay(ms: number): Promise<void> {
     return new Promise(res => setTimeout(res, ms))
@@ -24,7 +24,7 @@ export class CancellableTasksTracker {
             onStart?: (signal?: AbortSignal) => void
             ignoreSignal?: boolean
         },
-    ) : ErrGroupTask<any> {
+    ) : Task<any> {
         return async (signal?: AbortSignal) => {
             return new Promise<any>((resolve, reject) => {
                 let signalSub: (() => void) | undefined = undefined
