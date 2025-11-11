@@ -1,5 +1,5 @@
 {
-    "name": "js-concurrency",
+    "name": "js-concurrent",
     "version": "1.0.0",
     "description": "Abortion-aware concurrency primitives",
     "main": "dist/index.js",
@@ -20,9 +20,9 @@
     ],
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/cardinalby/js-concurrency.git"
+        "url": "git+https://github.com/cardinalby/js-concurrent.git"
     },
-    "homepage": "https://github.com/cardinalby/js-concurrency",
+    "homepage": "https://github.com/cardinalby/js-concurrent",
     "author": "cardinalby",
     "license": "MIT",
     "files": [

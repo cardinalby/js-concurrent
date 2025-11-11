@@ -1,7 +1,7 @@
-# js-concurrency
+# js-concurrent
 
-[![test](https://github.com/cardinalby/js-concurrency/actions/workflows/test.yml/badge.svg)](https://github.com/cardinalby/js-concurrency/actions/workflows/test.yml)
-[![npm version](https://img.shields.io/npm/v/js-concurrency.svg)](https://www.npmjs.com/package/js-concurrency)
+[![test](https://github.com/cardinalby/js-concurrent/actions/workflows/test.yml/badge.svg)](https://github.com/cardinalby/js-concurrent/actions/workflows/test.yml)
+[![npm version](https://img.shields.io/npm/v/js-concurrent.svg)](https://www.npmjs.com/package/js-concurrent)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
 
 **Abort-aware concurrency primitives for JavaScript/TypeScript**, inspired by Go's 
@@ -20,12 +20,12 @@ Unlike native Promise methods that work with promises, this library uses **tasks
 ## Installation
 
 ```bash
-npm install js-concurrency
+npm install js-concurrent
 ```
 
 ## Comparison with Native Promises
 
-| Feature | Native Promises | js-concurrency |
+| Feature | Native Promises | js-concurrent |
 |---------|----------------|----------------|
 | Parallel execution | ✅ `Promise.all()` | ✅ `allWithAbort()` |
 | Race condition | ✅ `Promise.race()` | ✅ `raceWithAbort()` |
@@ -73,7 +73,7 @@ allWithAbort([
 ### Basic parallel execution with automatic cancellation
 
 ```typescript
-import {allWithAbort} from 'js-concurrency';
+import {allWithAbort} from 'js-concurrent';
 
 // Tasks receive an AbortSignal and can react to cancellation
 const tasks = [
@@ -104,7 +104,7 @@ try {
 
 If you don't want the server or API to be overwhelmed or ban you:
 ```typescript
-import {allWithAbort} from 'js-concurrency';
+import {allWithAbort} from 'js-concurrent';
 
 const urls = [/* 100 URLs */];
 
@@ -121,7 +121,7 @@ const results = await allWithAbort(
 ### Manual cancellation with AbortController/AbortSignal
 
 ```typescript
-import { allWithAbort } from 'js-concurrency';
+import { allWithAbort } from 'js-concurrent';
 
 try {
   await allWithAbort(
@@ -204,7 +204,7 @@ Promise that resolves with an array of results in the same order as input tasks.
 #### Example
 
 ```typescript
-import { allWithAbort } from 'js-concurrency';
+import { allWithAbort } from 'js-concurrent';
 
 const results = await allWithAbort([
     async (signal) => {
@@ -256,7 +256,7 @@ Promise that settles (resolves or rejects) with the result of the first task to 
 #### Example
 
 ```typescript
-import { raceWithAbort } from 'js-concurrency';
+import { raceWithAbort } from 'js-concurrent';
 
 // Race between multiple API endpoints
 const result = await raceWithAbort([
@@ -304,7 +304,7 @@ Promise that resolves with the result of the first successfully completed task.
 #### Example
 
 ```typescript
-import { anyWithAbort } from 'js-concurrency';
+import { anyWithAbort } from 'js-concurrent';
 
 // Try multiple fallback sources
 try {
@@ -356,7 +356,7 @@ A limiter function that accepts an async function and an optional `AbortSignal`.
 #### Example
 
 ```typescript
-import { newLimiter } from 'js-concurrency';
+import { newLimiter } from 'js-concurrent';
 
 // Create a limiter that allows max 3 concurrent operations
 const limiter = newLimiter(3);
