@@ -118,18 +118,20 @@ const results = await allWithAbort(
 );
 ```
 
-### Manual cancellation with AbortController
+### Manual cancellation with AbortController/AbortSignal
 
 ```typescript
 import { allWithAbort } from 'js-concurrency';
 
-const controller = new AbortController();
-
 try {
   await allWithAbort(
       tasks,
-      // Cancel all tasks after 5 seconds
-      { signal: AbortSignal.timeout(5000) },
+      {
+          // Cancel all tasks after 5 seconds
+          signal: AbortSignal.timeout(5000),
+          // Allow max 3 tasks to run concurrently
+          concurrencyLimit: 3,
+      },
   );
 } catch (error) {
     console.error('Aborted:', error);
@@ -195,7 +197,8 @@ Promise that resolves with an array of results in the same order as input tasks.
 
 - ✅ All tasks must succeed for the promise to resolve
 - ❌ If any task fails, remaining tasks are aborted and the promise rejects with the first error
-- 🛑 If `options.signal` is aborted, all tasks are aborted
+- 🛑 If `options.signal` is aborted, all tasks are aborted and new tasks are not started, 
+  the resulting Promise is rejected with the abort reason
 - 📊 Results maintain input order regardless of completion order
 
 #### Example
@@ -246,6 +249,8 @@ Promise that settles (resolves or rejects) with the result of the first task to 
 
 - 🏁 Returns the first task that completes (whether it succeeds or fails)
 - 🛑 When a task completes, all other tasks are aborted with `GotRaceWinnerError`
+- 🛑 If `options.signal` is aborted, all tasks are aborted and new tasks are not started, 
+  the resulting Promise is fulfilled as if all tasks failed (compatible with `Promise.race()`)
 - ⚙️ Respects `concurrencyLimit` - tasks wait their turn to start
 
 #### Example
@@ -293,6 +298,8 @@ Promise that resolves with the result of the first successfully completed task.
 - ✅ Returns the first task that **succeeds**
 - ❌ Task rejections are collected; if all tasks fail, returns `AggregateError`
 - 🛑 When a task succeeds, all other tasks are aborted with `GotRaceWinnerError`
+- 🛑 If `options.signal` is aborted, all tasks are aborted and new tasks are not started, 
+  the resulting Promise is rejected with the abort reason
 
 #### Example
 

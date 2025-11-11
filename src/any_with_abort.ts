@@ -10,8 +10,8 @@ const allTasksRejectedMessage = 'All promises were rejected'
  * anyWithAbort is similar to Promise.any() but receives Tasks and runs tasks concurrently,
  * respecting `options.concurrencyLimit`.
  * Returns the first task that fulfills (resolves successfully).
- * When a task fulfills, all other tasks are aborted with GotRaceWinnerError.
- * If all tasks reject, the resulting Promise is rejected with an AggregateError containing all rejection reasons.
+ * When a task fulfills, all other tasks are aborted with `GotRaceWinnerError`.
+ * If all tasks reject, the resulting Promise is rejected with an `AggregateError` containing all rejection reasons.
  * If `options.signal` is aborted before any task fulfills:
  * - all running tasks are aborted and new tasks are not started
  * - the resulting Promise is rejected with the abort reason.
@@ -25,8 +25,8 @@ export function anyWithAbort<T extends readonly Task<unknown>[] | []>(
  * anyWithAbort is similar to Promise.any() but receives Tasks and runs tasks concurrently,
  * respecting `options.concurrencyLimit`.
  * Returns the first task that fulfills (resolves successfully).
- * When a task fulfills, all other tasks are aborted with GotRaceWinnerError.
- * If all tasks reject, the resulting Promise is rejected with an AggregateError containing all rejection reasons.
+ * When a task fulfills, all other tasks are aborted with `GotRaceWinnerError`.
+ * If all tasks reject, the resulting Promise is rejected with an `AggregateError` containing all rejection reasons.
  * If `options.signal` is aborted before any task fulfills:
  * - all running tasks are aborted and new tasks are not started
  * - the resulting Promise is rejected with the abort reason.

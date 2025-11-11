@@ -19,8 +19,11 @@ export function allWithAbort<T extends readonly Task<unknown>[] | []>(
 
 /**
  * allWithAbort is similar to Promise.all() but receives Tasks and runs all provided tasks concurrently,
- * respecting the provided RunOptions. If any task fails, all other running tasks are aborted (or never started),
- * and the resulting Promise is rejected. The result array has the same length as the input tasks, with each result
+ * respecting `options.concurrencyLimit`.
+ * If any task fails, or `options.signal` is aborted:
+ * - all other running tasks are aborted and new tasks are not started
+ * - the resulting Promise is rejected with the first error or abort reason.
+ * The result array has the same length as the input tasks, with each result
  * corresponding to the task at the same index
  */
 export function allWithAbort<T>(
