@@ -407,6 +407,59 @@ class Semaphore {
 }
 ```
 
+---
+
+### 🔻 Rendezvous
+
+A reusable synchronization barrier: blocks all participants until every one of the
+required `count` has arrived, then releases them all simultaneously and resets for
+the next round.
+
+```typescript
+class Rendezvous {
+  constructor(count: number);
+
+  /**
+   * Counts this caller as arrived and waits until all `count` participants
+   * have called arrive(). The last arrival releases everyone at once.
+   */
+  arrive(): Promise<void>;
+
+  /**
+   * Waits for the current round to complete without counting as a participant.
+   * Useful for coordinators, timeouts, or any observer that must not be one
+   * of the N required arrivals.
+   */
+  wait(): Promise<void>;
+
+  /**
+   * Cancels the current round: all pending arrive() and wait() promises reject
+   * with `reason` (or standard `DOMException` with `name === 'AbortError'` if not provided) 
+   * and the barrier resets for the next round.
+   */
+  abort(reason?: unknown): void;
+}
+```
+
+#### Example
+
+```typescript
+import { Rendezvous } from 'js-concurrent';
+
+const barrier = new Rendezvous(3)
+
+async function worker(id: number) {
+    await doPhase1(id)
+    await barrier.arrive()   // wait for all 3 workers before continuing
+    await doPhase2(id)
+}
+
+// Coordinator: observe completion without being a required participant
+barrier.wait().then(() => console.log('all workers reached the checkpoint'))
+
+await Promise.all([worker(1), worker(2), worker(3)])
+```
+
 ## TypeScript Support
 
 This library is written in TypeScript and provides declaration with full type safety similar to native Promise methods.

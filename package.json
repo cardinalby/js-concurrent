@@ -1,6 +1,6 @@
 {
     "name": "js-concurrent",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "description": "Abortion-aware concurrency primitives",
     "main": "dist/index.js",
     "types": "dist/index.d.ts",
@@ -16,7 +16,9 @@
         "abort",
         "cancellation",
         "limiter",
-        "semaphore"
+        "semaphore",
+        "randezvous",
+        "barrier"
     ],
     "repository": {
         "type": "git",
