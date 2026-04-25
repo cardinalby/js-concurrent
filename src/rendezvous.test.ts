@@ -1,4 +1,4 @@
-import { Rendezvous } from './randezvous'
+import { Rendezvous } from './rendezvous'
 
 describe('Rendezvous', () => {
     test('resolves immediately when count is 1', async () => {

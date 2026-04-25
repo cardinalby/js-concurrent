@@ -1,4 +1,5 @@
 import {Semaphore} from "./semaphore";
+import {Rendezvous} from "./rendezvous";
 import {newLimiter, ConcurrencyLimiter} from "./concurrency_limiter";
 import {Task, RunOptions, ConcurrentTaskFailedError} from "./common";
 import {allWithAbort} from "./all_with_abort";
@@ -9,6 +10,7 @@ export {
     Semaphore,
     newLimiter,
     ConcurrencyLimiter,
+    Rendezvous,
     Task,
     RunOptions,
     GotRaceWinnerError,
