@@ -95,9 +95,10 @@ describe('CancellableTasksTracker', () => {
         const task1 = tracker.createTask(1, 100, 'result1')
         const task2 = tracker.createTask(2, 200, new Error('error2'))
 
+        const signal = new AbortController().signal
         await Promise.allSettled([
-            task1(),
-            task2()
+            task1(signal),
+            task2(signal)
         ])
 
         expect(tracker.executionOrder).toEqual([1, 2])

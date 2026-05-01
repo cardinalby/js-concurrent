@@ -1,7 +1,7 @@
 /**
- * Tasks is a function that starts an asynchronous task that can be aborted via an AbortSignal
+ * Task is a function that starts a cancellable asynchronous operation
  */
-export type Task<T> = (abortSignal?: AbortSignal) => Promise<T>
+export type Task<T> = (signal: AbortSignal) => Promise<T>
 export type RunOptions = {
     /**
      * Maximum number of tasks to run concurrently. If not specified or <= 0, all tasks will run concurrently

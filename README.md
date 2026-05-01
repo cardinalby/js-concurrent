@@ -56,15 +56,15 @@ This library uses **task functions** that return promises enabling better contro
 - ⚡ Tasks can be auto-aborted when one fails or succeeds
 
 ```typescript
-type Task<T> = (abortSignal?: AbortSignal) => Promise<T>
+type Task<T> = (signal: AbortSignal) => Promise<T>
 ````
 
 ```typescript
 // ✅ Tasks start when needed and can be cancelled
 allWithAbort([
-  (signal) => fetch('/api/1', { signal }), // Starts on demand
-  (signal) => fetch('/api/2', { signal }), // Can be cancelled
-  (signal) => fetch('/api/3', { signal })  // Can be cancelled
+  signal => fetch('/api/1', { signal }), // Starts on demand
+  signal => fetch('/api/2', { signal }), // Can be cancelled
+  signal => fetch('/api/3', { signal })  // Can be cancelled
 ]);
 ```
 
@@ -142,10 +142,10 @@ try {
 
 ### ◆ Common Types
 
-Instead of Promises, the lib focuses on **tasks** - functions that return Promises and accept an optional `AbortSignal`.
+Instead of Promises, the lib focuses on **tasks** - functions that start abortable async operation 
 
 ```typescript
-type Task<T> = (abortSignal?: AbortSignal) => Promise<T>
+type Task<T> = (signal: AbortSignal) => Promise<T>
 ````
 
 You can pass them to functions like `allWithAbort()`, `raceWithAbort()`, and `anyWithAbort()` to
@@ -153,8 +153,6 @@ run them with concurrency control (**limiting** the number of running tasks) and
 
 Each of concurrency methods (`allWithAbort()`, `raceWithAbort()`, `anyWithAbort()`) accepts an optional `RunOptions` object:
 ```typescript
-type ErrGroupTask<T> = (signal?: AbortSignal) => Promise<T>;
-
 interface RunOptions {
   /**
    * Maximum number of tasks to run concurrently.
@@ -177,7 +175,7 @@ Similar to `Promise.all()`, but with abort support and concurrency control. Runs
 
 ```typescript
 function allWithAbort<T>(
-  tasks: Iterable<ErrGroupTask<T>>,
+  tasks: Iterable<Task<T>>,
   options?: RunOptions
 ): Promise<T[]>;
 ```
@@ -229,7 +227,7 @@ Returns the first task to complete (resolve or reject) and aborts all others.
 
 ```typescript
 function raceWithAbort<T>(
-  tasks: Iterable<ErrGroupTask<T>>,
+  tasks: Iterable<Task<T>>,
   options?: RunOptions
 ): Promise<T>;
 ```
@@ -277,7 +275,7 @@ Similar to `Promise.any()`, but with abort support. Returns the first task to **
 
 ```typescript
 function anyWithAbort<T>(
-  tasks: Iterable<ErrGroupTask<T>>,
+  tasks: Iterable<Task<T>>,
   options?: RunOptions
 ): Promise<T>;
 ```
