@@ -1,4 +1,4 @@
-import {Task} from "./common";
+import {Task} from "./task";
 
 export function delay(ms: number): Promise<void> {
     return new Promise(res => setTimeout(res, ms))
@@ -25,7 +25,9 @@ export class CancellableTasksTracker {
             ignoreSignal?: boolean
         },
     ) : Task<any> {
-        return async (signal?: AbortSignal) => {
+        // Plain function — the most natural way a lib consumer writes a Task<T>.
+        // Task<T> is a callable interface so any matching function satisfies it.
+        return async (signal: AbortSignal) => {
             return new Promise<any>((resolve, reject) => {
                 let signalSub: (() => void) | undefined = undefined
                 this.beforeDelay(id, signal)
@@ -96,6 +98,7 @@ describe('CancellableTasksTracker', () => {
         const task2 = tracker.createTask(2, 200, new Error('error2'))
 
         const signal = new AbortController().signal
+        // Tasks are plain functions — call them directly, just like the lib internals do
         await Promise.allSettled([
             task1(signal),
             task2(signal)

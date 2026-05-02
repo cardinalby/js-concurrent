@@ -1,10 +1,10 @@
 import {Semaphore} from "./semaphore";
 import {Rendezvous} from "./rendezvous";
 import {newLimiter, ConcurrencyLimiter} from "./concurrency_limiter";
-import {Task, RunOptions, ConcurrentTaskFailedError} from "./common";
-import {allWithAbort} from "./all_with_abort";
-import {raceWithAbort, GotRaceWinnerError} from "./race_with_abort";
-import {anyWithAbort} from "./any_with_abort";
+import {RunOptions, ConcurrentTaskFailedError} from "./common";
+import {GotRaceWinnerError} from "./race_with_abort";
+import "./task"; // registers static methods on Task
+import {Task} from "./task";
 
 export {
     Semaphore,
@@ -15,8 +15,4 @@ export {
     RunOptions,
     GotRaceWinnerError,
     ConcurrentTaskFailedError,
-    allWithAbort,
-    raceWithAbort,
-    anyWithAbort,
 };
-

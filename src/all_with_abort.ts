@@ -1,38 +1,10 @@
 import {Semaphore} from "./semaphore";
-import {ConcurrentTaskFailedError, Task, RunOptions} from "./common";
+import {ConcurrentTaskFailedError, TaskFn, RunOptions} from "./common";
 import {raceWithAbortSignal} from "./race_with_abort_signal";
 import {createGroupAc} from "./group_abort_controller";
 
-/**
- * allWithAbort is similar to Promise.all() but receives Tasks and runs all provided tasks concurrently,
- * respecting `options.concurrencyLimit`.
- * If any task fails, or `options.signal` is aborted:
- * - all other running tasks are aborted and new tasks are not started
- * - the resulting Promise is rejected with the first error or abort reason.
- * The result array has the same length as the input tasks, with each result
- * corresponding to the task at the same index
- */
-export function allWithAbort<T extends readonly Task<unknown>[] | []>(
-    tasks: T,
-    options?: RunOptions
-): Promise<{ -readonly [P in keyof T]: Awaited<ReturnType<T[P]>> }>;
-
-/**
- * allWithAbort is similar to Promise.all() but receives Tasks and runs all provided tasks concurrently,
- * respecting `options.concurrencyLimit`.
- * If any task fails, or `options.signal` is aborted:
- * - all other running tasks are aborted and new tasks are not started
- * - the resulting Promise is rejected with the first error or abort reason.
- * The result array has the same length as the input tasks, with each result
- * corresponding to the task at the same index
- */
-export function allWithAbort<T>(
-    tasks: Iterable<Task<T>>,
-    options?: RunOptions
-): Promise<Awaited<T>[]>;
-
 export async function allWithAbort(
-    tasks: Iterable<Task<any>>,
+    tasks: Iterable<TaskFn<any>>,
     options: RunOptions = {}
 ): Promise<Awaited<any>[]> {
     // copy the signal in case options is mutated during execution
@@ -43,9 +15,9 @@ export async function allWithAbort(
     const groupAc = createGroupAc(options.signal)
 
     // noinspection ES6MissingAwait
-    const resultsPromise = options.concurrencyLimit === undefined || options.concurrencyLimit <= 0
+    const resultsPromise = options.concurrency === undefined || options.concurrency <= 0
         ? allWithAbortUnlimited(tasks, groupAc)
-        : allWithAbortLimited(tasks, new Semaphore(options.concurrencyLimit), groupAc)
+        : allWithAbortLimited(tasks, new Semaphore(options.concurrency), groupAc)
 
     try {
         return await raceWithAbortSignal(resultsPromise, signal)
@@ -55,7 +27,7 @@ export async function allWithAbort(
 }
 
 async function allWithAbortUnlimited(
-    tasks: Iterable<Task<any>>,
+    tasks: Iterable<TaskFn<any>>,
     ac: AbortController,
 ): Promise<Awaited<any>[]> {
     const promises: Promise<any>[] = []
@@ -81,7 +53,7 @@ async function allWithAbortUnlimited(
 }
 
 function allWithAbortLimited(
-    tasks: Iterable<Task<any>>,
+    tasks: Iterable<TaskFn<any>>,
     semaphore: Semaphore,
     ac: AbortController,
 ): Promise<Awaited<any>[]> {

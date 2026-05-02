@@ -1,6 +1,5 @@
-import { anyWithAbort } from './any_with_abort'
+import { Task } from './task'
 import { CancellableTasksTracker, delay } from "./test_util.test";
-import { Task } from "./common";
 import { GotRaceWinnerError } from "./race_with_abort";
 
 describe('anyWithAbort', () => {
@@ -13,7 +12,7 @@ describe('anyWithAbort', () => {
                 tr.createTask(3, 150, 3)
             ]
 
-            const result = await anyWithAbort(tasks)
+            const result = await Task.any(tasks)
             expect(result).toBe(2)
             expect(tr.executionOrder).toEqual([1, 2, 3])
             expect(tr.resolvedTasks).toEqual([2])
@@ -26,8 +25,8 @@ describe('anyWithAbort', () => {
         })
 
         test('handles empty task array', async () => {
-            await expect(anyWithAbort([])).rejects.toThrow(AggregateError)
-            await expect(anyWithAbort([])).rejects.toThrow('All promises were rejected')
+            await expect(Task.any([])).rejects.toThrow(AggregateError)
+            await expect(Task.any([])).rejects.toThrow('All promises were rejected')
         })
 
         test('returns result with different types', async () => {
@@ -39,7 +38,7 @@ describe('anyWithAbort', () => {
                 tr.createTask(4, 150, true)
             ] as const
 
-            const result = await anyWithAbort(tasks)
+            const result = await Task.any(tasks)
             expect(result).toEqual({ key: 'value' })
             expect(tr.executionOrder).toEqual([1, 2, 3, 4])
             expect(tr.resolvedTasks).toEqual([3])
@@ -50,7 +49,7 @@ describe('anyWithAbort', () => {
 
         test('runs tasks concurrently', async () => {
             const tr = new CancellableTasksTracker(4)
-            await anyWithAbort([
+            await Task.any([
                 tr.createTask(1, 50, 1),
                 tr.createTask(2, 50, 2),
                 tr.createTask(3, 50, 3),
@@ -72,7 +71,7 @@ describe('anyWithAbort', () => {
                 tr.createTask(3, 100, 3, { ignoreSignal: true })
             ]
 
-            const result = await anyWithAbort(tasks)
+            const result = await Task.any(tasks)
             expect(result).toBe(2)
             expect(tr.executionOrder).toEqual([1, 2, 3])
             expect(tr.resolvedTasks).toEqual([2])
@@ -95,7 +94,7 @@ describe('anyWithAbort', () => {
                 tr.createTask(4, 150, 10)
             ]
 
-            const result = await anyWithAbort(tasks)
+            const result = await Task.any(tasks)
             expect(result).toBe(5)
             expect(tr.executionOrder).toEqual([1, 2, 3, 4])
             expect(tr.resolvedTasks).toEqual([2])
@@ -118,7 +117,7 @@ describe('anyWithAbort', () => {
                 tr.createTask(3, 150, error3)
             ]
 
-            const promise = anyWithAbort(tasks)
+            const promise = Task.any(tasks)
             await expect(promise).rejects.toBeInstanceOf(AggregateError)
 
             try {
@@ -144,7 +143,7 @@ describe('anyWithAbort', () => {
                 tr.createTask(3, 150, error)
             ]
 
-            const result = await anyWithAbort(tasks)
+            const result = await Task.any(tasks)
             expect(result).toBe(42)
             expect(tr.executionOrder).toEqual([1, 2, 3])
             expect(tr.resolvedTasks).toEqual([2])
@@ -165,7 +164,7 @@ describe('anyWithAbort', () => {
                 tr.createTask(4, 200, 200)
             ]
 
-            const result = await anyWithAbort(tasks)
+            const result = await Task.any(tasks)
             expect(result).toBe(100)
             expect(tr.executionOrder).toEqual([1, 2, 3, 4])
             expect(tr.resolvedTasks).toEqual([3])
@@ -181,7 +180,7 @@ describe('anyWithAbort', () => {
                 tr.createTask(1, 50, 42)
             ]
 
-            const result = await anyWithAbort(tasks)
+            const result = await Task.any(tasks)
             expect(result).toBe(42)
             expect(tr.executionOrder).toEqual([1])
             expect(tr.resolvedTasks).toEqual([1])
@@ -198,7 +197,7 @@ describe('anyWithAbort', () => {
             ]
 
             try {
-                await anyWithAbort(tasks)
+                await Task.any(tasks)
                 fail('Should have thrown')
             } catch (e: any) {
                 expect(e).toBeInstanceOf(AggregateError)
@@ -223,7 +222,7 @@ describe('anyWithAbort', () => {
                 tr.createTask(3, 500, 3)
             ]
 
-            const promise = anyWithAbort(tasks, { signal: parentAc.signal })
+            const promise = Task.any(tasks, { signal: parentAc.signal })
             // Abort after starting
             await delay(100)
             parentAc.abort('parent-abort')
@@ -244,7 +243,7 @@ describe('anyWithAbort', () => {
                 tr.createTask(2, 500, 2, { ignoreSignal: true })
             ]
 
-            const promise = anyWithAbort(tasks, { signal: parentAc.signal })
+            const promise = Task.any(tasks, { signal: parentAc.signal })
             await delay(100)
             parentAc.abort('parent-abort')
 
@@ -269,7 +268,7 @@ describe('anyWithAbort', () => {
                 tr.createTask(2, 100, 2)
             ]
 
-            await expect(anyWithAbort(tasks, { signal: parentAc.signal }))
+            await expect(Task.any(tasks, { signal: parentAc.signal }))
                 .rejects.toBe('pre-aborted')
 
             expect(tr.executionOrder).toEqual([])
@@ -287,7 +286,7 @@ describe('anyWithAbort', () => {
                 tr.createTask(2, 80, 2)
             ]
 
-            const promise = anyWithAbort(tasks, { signal: parentAc.signal })
+            const promise = Task.any(tasks, { signal: parentAc.signal })
             await delay(50)
             parentAc.abort('parent-abort')
 
@@ -299,8 +298,8 @@ describe('anyWithAbort', () => {
 
     describe('concurrency limiting', () => {
         test('respects concurrency limit', async () => {
-            const concurrencyLimit = 2
-            const tr = new CancellableTasksTracker(concurrencyLimit)
+            const concurrency = 2
+            const tr = new CancellableTasksTracker(concurrency)
             const tasks: Task<number>[] = [
                 tr.createTask(1, 100, 1),
                 tr.createTask(2, 100, 2),
@@ -309,13 +308,13 @@ describe('anyWithAbort', () => {
                 tr.createTask(5, 100, 5)
             ]
 
-            await anyWithAbort(tasks, { concurrencyLimit })
+            await Task.any(tasks, { concurrency })
             // Task 1 and 2 start first, one of them completes in 100ms
             // Since all tasks in first batch take 100ms, one of them wins
             expect(tr.executionOrder).toContain(1)
             expect(tr.executionOrder).toContain(2)
             expect(tr.resolvedTasks.length).toBe(1)
-            expect(tr.maxSeenConcurrentTasks).toBe(concurrencyLimit)
+            expect(tr.maxSeenConcurrentTasks).toBe(concurrency)
         })
 
         test('zero concurrency limit runs all tasks', async () => {
@@ -326,7 +325,7 @@ describe('anyWithAbort', () => {
                 tr.createTask(3, 150, 3)
             ]
 
-            const result = await anyWithAbort(tasks, { concurrencyLimit: 0 })
+            const result = await Task.any(tasks, { concurrency: 0 })
             expect(result).toBe(1)
             expect(tr.executionOrder).toEqual([1, 2, 3])
             expect(tr.resolvedTasks).toEqual([1])
@@ -341,7 +340,7 @@ describe('anyWithAbort', () => {
                 tr.createTask(1, 50, 1)
             ]
 
-            const result = await anyWithAbort(tasks, { concurrencyLimit: 1 })
+            const result = await Task.any(tasks, { concurrency: 1 })
             expect(result).toBe(1)
             expect(tr.executionOrder).toEqual([1])
             expect(tr.resolvedTasks).toEqual([1])
@@ -358,7 +357,7 @@ describe('anyWithAbort', () => {
                 tr.createTask(3, 150, 3)
             ]
 
-            const result = await anyWithAbort(tasks, { concurrencyLimit: 10 })
+            const result = await Task.any(tasks, { concurrency: 10 })
             expect(result).toBe(1)
             expect(tr.executionOrder).toEqual([1, 2, 3])
             expect(tr.resolvedTasks).toEqual([1])
@@ -370,8 +369,8 @@ describe('anyWithAbort', () => {
         test('first batch all rejects, second batch fulfills with concurrency limit', async () => {
             const error1 = new Error('error-1')
             const error2 = new Error('error-2')
-            const concurrencyLimit = 2
-            const tr = new CancellableTasksTracker(concurrencyLimit)
+            const concurrency = 2
+            const tr = new CancellableTasksTracker(concurrency)
             const tasks: Task<number>[] = [
                 tr.createTask(1, 50, error1),  // first batch - rejects
                 tr.createTask(2, 50, error2),  // first batch - rejects
@@ -379,14 +378,14 @@ describe('anyWithAbort', () => {
                 tr.createTask(4, 50, 4)        // second batch - should be aborted
             ]
 
-            const result = await anyWithAbort(tasks, { concurrencyLimit })
+            const result = await Task.any(tasks, { concurrency })
             expect(result).toBe(3)
             expect(tr.executionOrder).toEqual([1, 2, 3, 4])
             expect(tr.selfRejectedTasks).toEqual([1, 2])
             expect(tr.resolvedTasks).toEqual([3])
             expect(tr.abortedTasks.size).toBeGreaterThanOrEqual(1)
             expect(tr.abortedTasks.has(4)).toBe(true)
-            expect(tr.maxSeenConcurrentTasks).toBe(concurrencyLimit)
+            expect(tr.maxSeenConcurrentTasks).toBe(concurrency)
         })
 
         test('all tasks reject with concurrency limit', async () => {
@@ -394,8 +393,8 @@ describe('anyWithAbort', () => {
             const error2 = new Error('error-2')
             const error3 = new Error('error-3')
             const error4 = new Error('error-4')
-            const concurrencyLimit = 2
-            const tr = new CancellableTasksTracker(concurrencyLimit)
+            const concurrency = 2
+            const tr = new CancellableTasksTracker(concurrency)
             const tasks: Task<number>[] = [
                 tr.createTask(1, 50, error1),
                 tr.createTask(2, 50, error2),
@@ -404,7 +403,7 @@ describe('anyWithAbort', () => {
             ]
 
             try {
-                await anyWithAbort(tasks, { concurrencyLimit })
+                await Task.any(tasks, { concurrency })
                 fail('Should have thrown')
             } catch (e: any) {
                 expect(e).toBeInstanceOf(AggregateError)
@@ -415,13 +414,13 @@ describe('anyWithAbort', () => {
             expect(tr.selfRejectedTasks.sort()).toEqual([1, 2, 3, 4])
             expect(tr.resolvedTasks).toEqual([])
             expect(tr.abortedTasks.size).toBe(0)
-            expect(tr.maxSeenConcurrentTasks).toBe(concurrencyLimit)
+            expect(tr.maxSeenConcurrentTasks).toBe(concurrency)
         })
 
         test('respects parent signal with concurrency limit', async () => {
             const parentAc = new AbortController()
-            const concurrencyLimit = 2
-            const tr = new CancellableTasksTracker(concurrencyLimit)
+            const concurrency = 2
+            const tr = new CancellableTasksTracker(concurrency)
             const tasks: Task<number>[] = [
                 tr.createTask(1, 100, 1),
                 tr.createTask(2, 100, 2),
@@ -429,7 +428,7 @@ describe('anyWithAbort', () => {
                 tr.createTask(4, 100, 4)
             ]
 
-            const promise = anyWithAbort(tasks, { concurrencyLimit, signal: parentAc.signal })
+            const promise = Task.any(tasks, { concurrency, signal: parentAc.signal })
             await delay(20)
             parentAc.abort('parent-abort')
 
@@ -439,7 +438,7 @@ describe('anyWithAbort', () => {
             expect(tr.abortedTasks).toEqual(new Map([[1, 'parent-abort'], [2, 'parent-abort']]))
             expect(tr.resolvedTasks).toEqual([])
             expect(tr.selfRejectedTasks).toEqual([])
-            expect(tr.maxSeenConcurrentTasks).toBe(concurrencyLimit)
+            expect(tr.maxSeenConcurrentTasks).toBe(concurrency)
             await delay(150) // wait to ensure other tasks haven't started
             expect(tr.abortedTasks).toEqual(new Map([[1, 'parent-abort'], [2, 'parent-abort']]))
             expect(tr.resolvedTasks).toEqual([])
@@ -456,7 +455,7 @@ describe('anyWithAbort', () => {
                 tr.createTask(3, 100, 3)
             ]
 
-            await expect(anyWithAbort(tasks, { concurrencyLimit: 2, signal: parentAc.signal }))
+            await expect(Task.any(tasks, { concurrency: 2, signal: parentAc.signal }))
                 .rejects.toBe('pre-aborted')
 
             expect(tr.executionOrder).toEqual([])
@@ -471,30 +470,30 @@ describe('anyWithAbort', () => {
 
         test('fulfillment occurs while parent signal aborted with concurrency limit', async () => {
             const parentAc = new AbortController()
-            const concurrencyLimit = 2
-            const tr = new CancellableTasksTracker(concurrencyLimit)
+            const concurrency = 2
+            const tr = new CancellableTasksTracker(concurrency)
             const tasks: Task<number>[] = [
                 tr.createTask(1, 80, 1),  // will fulfill
                 tr.createTask(2, 150, 2),
                 tr.createTask(3, 200, 3)
             ]
 
-            const promise = anyWithAbort(tasks, { concurrencyLimit, signal: parentAc.signal })
+            const promise = Task.any(tasks, { concurrency, signal: parentAc.signal })
             await delay(50)
             parentAc.abort('parent-abort')
 
             // expect parent abort to take precedence
             await expect(promise).rejects.toBe('parent-abort')
             expect(tr.executionOrder).toEqual([1, 2])
-            expect(tr.maxSeenConcurrentTasks).toBe(concurrencyLimit)
+            expect(tr.maxSeenConcurrentTasks).toBe(concurrency)
             expect(tr.abortedTasks).toEqual(new Map([[1, 'parent-abort'], [2, 'parent-abort']]))
         })
 
         test('handles mixed results with concurrency limit', async () => {
             const error1 = new Error('error-1')
             const error2 = new Error('error-2')
-            const concurrencyLimit = 2
-            const tr = new CancellableTasksTracker(concurrencyLimit)
+            const concurrency = 2
+            const tr = new CancellableTasksTracker(concurrency)
             const tasks: Task<number>[] = [
                 tr.createTask(1, 100, error1),
                 tr.createTask(2, 100, error2),
@@ -503,10 +502,10 @@ describe('anyWithAbort', () => {
                 tr.createTask(5, 100, 5)
             ]
 
-            const result = await anyWithAbort(tasks, { concurrencyLimit })
+            const result = await Task.any(tasks, { concurrency })
             expect(result).toBe(42)
             expect(tr.resolvedTasks).toEqual([4])
-            expect(tr.maxSeenConcurrentTasks).toBe(concurrencyLimit)
+            expect(tr.maxSeenConcurrentTasks).toBe(concurrency)
         })
     })
 })

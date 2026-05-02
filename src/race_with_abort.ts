@@ -1,13 +1,13 @@
 import {Semaphore} from "./semaphore";
-import {ConcurrentTaskFailedError, Task, RunOptions} from "./common";
+import {ConcurrentTaskFailedError, TaskFn, RunOptions} from "./common";
 import {raceWithAbortSignal} from "./race_with_abort_signal";
 import {createGroupAc} from "./group_abort_controller";
 
 /**
  * Error thrown to abort tasks when another task has already completed.
  * Can be returned by:
- * - `raceWithAbort` to indicate that the task was aborted because another task completed first
- * - `anyWithAbort` to indicate that the task was aborted because another task fulfilled first
+ * - `Task.race` to indicate that the task was aborted because another task completed first
+ * - `Task.any` to indicate that the task was aborted because another task fulfilled first
  */
 export class GotRaceWinnerError extends Error {
     constructor() {
@@ -15,34 +15,9 @@ export class GotRaceWinnerError extends Error {
         this.name = 'RaceWinnerError'
     }
 }
-/**
- * raceWithAbort is similar to Promise.race() but receives Tasks and runs tasks concurrently,
- * respecting `options.concurrencyLimit`.
- * Returns the first task that completes (either resolves or rejects), and aborts all other tasks with GotRaceWinnerError.
- * If `options.signal` is aborted before any task completes:
- * - all running tasks are aborted and new tasks are not started
- * - the resulting Promise is rejected with the abort reason.
- */
-export function raceWithAbort<T extends readonly Task<unknown>[] | []>(
-    tasks: T,
-    options?: RunOptions
-): Promise<Awaited<ReturnType<T[number]>>>;
-
-/**
- * raceWithAbort is similar to Promise.race() but receives Tasks and runs them concurrently,
- * respecting `options.concurrencyLimit`.
- * Returns the first task that completes (either resolves or rejects), and aborts all other tasks with GotRaceWinnerError.
- * If `options.signal` is aborted before any task completes:
- * - all running tasks are aborted and new tasks are not started
- * - the resulting Promise is rejected with the abort reason.
- */
-export function raceWithAbort<T>(
-    tasks: Iterable<Task<T>>,
-    options?: RunOptions
-): Promise<Awaited<T>>;
 
 export async function raceWithAbort(
-    tasks: Iterable<Task<any>>,
+    tasks: Iterable<TaskFn<any>>,
     options: RunOptions = {}
 ): Promise<Awaited<any>> {
     // copy the signal in case options is mutated during execution
@@ -60,9 +35,9 @@ export async function raceWithAbort(
     const groupAc = createGroupAc(options.signal)
 
     // noinspection ES6MissingAwait
-    const resultPromise = options.concurrencyLimit === undefined || options.concurrencyLimit <= 0
+    const resultPromise = options.concurrency === undefined || options.concurrency <= 0
         ? raceWithAbortUnlimited(tasksArray, groupAc)
-        : raceWithAbortLimited(tasksArray, new Semaphore(options.concurrencyLimit), groupAc)
+        : raceWithAbortLimited(tasksArray, new Semaphore(options.concurrency), groupAc)
 
     try {
         return await raceWithAbortSignal(resultPromise, signal)
@@ -72,7 +47,7 @@ export async function raceWithAbort(
 }
 
 async function raceWithAbortUnlimited(
-    tasks: Task<any>[],
+    tasks: TaskFn<any>[],
     ac: AbortController,
 ): Promise<Awaited<any>> {
     const promises: Promise<any>[] = []
@@ -89,7 +64,7 @@ async function raceWithAbortUnlimited(
 }
 
 function raceWithAbortLimited(
-    tasks: Task<any>[],
+    tasks: TaskFn<any>[],
     semaphore: Semaphore,
     ac: AbortController,
 ): Promise<Awaited<any>> {
